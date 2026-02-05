@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import type { Localized } from "@/types";
 import { ru, type Dictionary } from "./ru";
 import { en } from "./en";
 
@@ -25,12 +26,10 @@ export function useTranslation(): { t: Dictionary; locale: Locale } {
   return { t: dictionaries[current], locale: current };
 }
 
-/** A text value that exists in both languages. */
-export type Localized = { ru: string; en: string };
-
 /** Pick the right language from a localized content field. */
 export function localize(value: Localized, locale: string | undefined): string {
   return value[toLocale(locale)];
 }
 
 export type { Dictionary };
+export type { Localized };
