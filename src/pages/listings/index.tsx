@@ -1,4 +1,3 @@
-import Head from "next/head";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import type { GetServerSideProps } from "next";
@@ -16,6 +15,7 @@ import { localize, useTranslation, type Locale } from "@/locales";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Seo } from "@/components/Seo";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { Filters } from "@/components/search/Filters";
 import { SortSelect } from "@/components/search/SortSelect";
@@ -146,10 +146,11 @@ export default function CatalogPage({
 
   return (
     <>
-      <Head>
-        <title>{`${heading} — ${t.common.appName}`}</title>
-        <meta name="description" content={t.common.tagline} />
-      </Head>
+      <Seo
+        title={`${heading} — ${t.common.appName}`}
+        description={t.common.tagline}
+        image={listings[0]?.images[0]}
+      />
 
       <section className="mx-auto max-w-6xl px-4 py-8 md:py-10">
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

@@ -1,4 +1,3 @@
-import Head from "next/head";
 import Image from "next/image";
 import type { GetServerSideProps } from "next";
 import { format } from "date-fns";
@@ -9,6 +8,7 @@ import { getListingById, getListingBySlug } from "@/lib/data";
 import { nightsBetween } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
 import { Separator } from "@/components/ui/separator";
+import { Seo } from "@/components/Seo";
 import { PriceBreakdown } from "@/components/booking/PriceBreakdown";
 import { BookingForm } from "@/components/booking/BookingForm";
 
@@ -68,10 +68,11 @@ export default function BookingPage({ listing, checkIn, checkOut, guests }: Book
 
   return (
     <>
-      <Head>
-        <title>{`${t.booking.title} — ${t.common.appName}`}</title>
-        <meta name="description" content={t.booking.summary} />
-      </Head>
+      <Seo
+        title={`${t.booking.title} — ${t.common.appName}`}
+        description={t.booking.summary}
+        image={listing.images[0]}
+      />
 
       <section className="mx-auto max-w-5xl px-4 py-8 md:py-10">
         <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight md:text-3xl">

@@ -1,4 +1,3 @@
-import Head from "next/head";
 import type { GetStaticPaths, GetStaticProps } from "next";
 import { Star } from "lucide-react";
 
@@ -18,6 +17,7 @@ import { HostCard } from "@/components/listings/HostCard";
 import { ReviewList } from "@/components/listings/ReviewList";
 import { ListingMap } from "@/components/listings/ListingMap";
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { Seo } from "@/components/Seo";
 
 interface DetailProps {
   listing: Listing;
@@ -83,10 +83,11 @@ export default function ListingDetailPage({ listing, host, reviews, amenities }:
 
   return (
     <>
-      <Head>
-        <title>{`${title} — ${t.common.appName}`}</title>
-        <meta name="description" content={description} />
-      </Head>
+      <Seo
+        title={`${title} — ${t.common.appName}`}
+        description={description}
+        image={listing.images[0]}
+      />
 
       <article className="mx-auto max-w-6xl px-4 py-8">
         <header className="mb-6 flex flex-col gap-2">

@@ -1,4 +1,3 @@
-import Head from "next/head";
 import Link from "next/link";
 import type { GetStaticProps } from "next";
 import { ArrowRight } from "lucide-react";
@@ -6,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import type { Category, Listing } from "@/types";
 import { getCategories, getFeaturedListings } from "@/lib/data";
 import { useTranslation } from "@/locales";
+import { Seo } from "@/components/Seo";
 import { Hero } from "@/components/home/Hero";
 import { CategoryChips } from "@/components/home/CategoryChips";
 import { ListingGrid } from "@/components/listings/ListingGrid";
@@ -29,10 +29,11 @@ export default function Home({ featured, categories }: HomeProps) {
 
   return (
     <>
-      <Head>
-        <title>{`${t.common.appName} — ${t.common.tagline}`}</title>
-        <meta name="description" content={t.home.metaDescription} />
-      </Head>
+      <Seo
+        title={`${t.common.appName} — ${t.common.tagline}`}
+        description={t.home.metaDescription}
+        image={featured[0]?.images[0]}
+      />
 
       <Hero />
 

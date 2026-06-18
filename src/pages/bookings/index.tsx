@@ -1,4 +1,3 @@
-import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -13,6 +12,7 @@ import { formatPrice } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Seo } from "@/components/Seo";
 
 /** Pick the correct plural form for the active locale (no extra deps). */
 function pluralForm(
@@ -41,10 +41,7 @@ export default function MyBookingsPage() {
 
   return (
     <>
-      <Head>
-        <title>{`${t.nav.bookings} — ${t.common.appName}`}</title>
-        <meta name="description" content={t.nav.bookings} />
-      </Head>
+      <Seo title={`${t.nav.bookings} — ${t.common.appName}`} description={t.common.description} />
 
       <section className="mx-auto max-w-3xl px-4 py-8 md:py-10">
         <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">

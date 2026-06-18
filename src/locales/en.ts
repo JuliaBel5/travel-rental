@@ -6,6 +6,7 @@ export const en: Dictionary = {
     tagline: "Stays for your travels",
     search: "Search",
     loading: "Loading…",
+    description: "Wanderstay — book unique travel stays around the world.",
   },
   nav: {
     home: "Home",
@@ -13,6 +14,14 @@ export const en: Dictionary = {
     bookings: "My bookings",
     language: "Language",
     menu: "Menu",
+    skipToContent: "Skip to content",
+    toggleTheme: "Toggle theme",
+  },
+  notFound: {
+    title: "Page not found",
+    subtitle: "The page you're looking for doesn't exist or has moved.",
+    backHome: "Back to home",
+    browseStays: "Browse stays",
   },
   home: {
     metaDescription:

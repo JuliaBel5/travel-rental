@@ -4,6 +4,7 @@ export const ru = {
     tagline: "Аренда жилья для путешествий",
     search: "Найти",
     loading: "Загрузка…",
+    description: "Wanderstay — сервис аренды уникального жилья для путешествий по всему миру.",
   },
   nav: {
     home: "Главная",
@@ -11,6 +12,14 @@ export const ru = {
     bookings: "Мои бронирования",
     language: "Язык",
     menu: "Меню",
+    skipToContent: "Перейти к содержимому",
+    toggleTheme: "Сменить тему",
+  },
+  notFound: {
+    title: "Страница не найдена",
+    subtitle: "Похоже, такой страницы не существует или она была перемещена.",
+    backHome: "На главную",
+    browseStays: "Смотреть жильё",
   },
   home: {
     metaDescription:
