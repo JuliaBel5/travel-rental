@@ -5,7 +5,9 @@ export default function Document({ __NEXT_DATA__ }: DocumentProps) {
 
   return (
     <Html lang={locale}>
-      <Head />
+      <Head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+      </Head>
       <body className="antialiased">
         <Main />
         <NextScript />

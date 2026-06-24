@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Wanderstay">
+  <path fill="#242424" d="M16 2C9.9 2 5 6.9 5 13c0 7.6 9.3 15.6 10.3 16.4a1.1 1.1 0 0 0 1.4 0C17.7 28.6 27 20.6 27 13 27 6.9 22.1 2 16 2Z"/>
+  <polygon fill="#ffffff" points="16,6.8 23,12.6 9,12.6"/>
+  <rect fill="#ffffff" x="11.3" y="12.2" width="9.4" height="7" rx="0.6"/>
+  <rect fill="#242424" x="14.4" y="15.2" width="3.2" height="4" rx="0.4"/>
+</svg>
