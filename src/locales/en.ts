@@ -31,6 +31,7 @@ export const en: Dictionary = {
       title: "Your next journey starts here",
       subtitle:
         "Book one-of-a-kind homes around the world, from beachfront villas to alpine chalets.",
+      imageAlt: "Tropical beach at sunset",
     },
     categories: {
       title: "Where to next?",
