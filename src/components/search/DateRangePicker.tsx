@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { enUS, ru as ruLocale } from "date-fns/locale";
@@ -8,6 +9,21 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+/** Show two months side by side on desktop, a single month on small screens. */
+function useMonthsToShow(): number {
+  const [months, setMonths] = useState(2);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 768px)");
+    const update = () => setMonths(query.matches ? 2 : 1);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return months;
+}
 
 export function DateRangePicker({
   value,
@@ -20,6 +36,7 @@ export function DateRangePicker({
 }) {
   const { t, locale } = useTranslation();
   const dfLocale = locale === "ru" ? ruLocale : enUS;
+  const months = useMonthsToShow();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -51,7 +68,7 @@ export function DateRangePicker({
           selected={value}
           onSelect={onChange}
           defaultMonth={value?.from}
-          numberOfMonths={1}
+          numberOfMonths={months}
           disabled={{ before: today }}
           locale={dfLocale}
           autoFocus
