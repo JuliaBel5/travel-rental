@@ -84,6 +84,18 @@ model Booking {
   total       Int
   currency    String
   createdAt   DateTime @default(now())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
 
   @@index([listingId, checkIn, checkOut])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  image        String?
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  bookings     Booking[]
 }
