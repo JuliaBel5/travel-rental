@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { Logo } from "./Logo";
+import { AuthMenu } from "./AuthMenu";
 
 export function Header() {
   const { t } = useTranslation();
@@ -68,6 +69,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <LanguageSwitcher />
+          <AuthMenu />
         </div>
       </div>
     </header>
