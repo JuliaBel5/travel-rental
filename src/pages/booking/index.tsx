@@ -48,7 +48,7 @@ export const getServerSideProps: GetServerSideProps<BookingPageProps> = async ({
   const checkOut = firstParam(query.checkOut);
   const guests = numberParam(query.guests) ?? 1;
 
-  const listing = id ? (getListingById(id) ?? getListingBySlug(id)) : undefined;
+  const listing = id ? ((await getListingById(id)) ?? (await getListingBySlug(id))) : undefined;
   if (!listing || !checkIn || !checkOut || nightsBetween(checkIn, checkOut) <= 0) {
     return { redirect: { destination: "/listings", permanent: false } };
   }

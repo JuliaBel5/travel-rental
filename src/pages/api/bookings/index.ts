@@ -7,7 +7,7 @@ import type { Booking } from "@/types";
 /** In-memory store — resets on server restart (MVP only). */
 const bookings: Booking[] = [];
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Booking | Booking[] | { error: string }>,
 ) {
@@ -26,7 +26,7 @@ export default function handler(
     return res.status(400).json({ error: "Missing required booking fields" });
   }
 
-  const listing = getListingById(listingId) ?? getListingBySlug(listingId);
+  const listing = (await getListingById(listingId)) ?? (await getListingBySlug(listingId));
   if (!listing) {
     return res.status(404).json({ error: "Listing not found" });
   }

@@ -5,8 +5,7 @@ import { CalendarDays, Users } from "lucide-react";
 import { format } from "date-fns";
 import { enUS, ru as ruLocale } from "date-fns/locale";
 
-import type { Booking } from "@/types";
-import { getListingById } from "@/lib/data";
+import type { Booking, Listing } from "@/types";
 import { getStoredBookings } from "@/lib/bookings";
 import { formatPrice } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
@@ -29,12 +28,29 @@ function pluralForm(
 export default function MyBookingsPage() {
   const { t, locale } = useTranslation();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [listingsById, setListingsById] = useState<Record<string, Listing>>({});
   const [ready, setReady] = useState(false);
   const dfLocale = locale === "ru" ? ruLocale : enUS;
 
   useEffect(() => {
     setBookings(getStoredBookings());
     setReady(true);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/listings")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Listing[]) => {
+        if (!active) return;
+        const map: Record<string, Listing> = {};
+        for (const listing of data) map[listing.id] = listing;
+        setListingsById(map);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
   const formatDate = (value: string) => format(new Date(value), "d MMM", { locale: dfLocale });
@@ -63,7 +79,7 @@ export default function MyBookingsPage() {
         ) : (
           <ul className="mt-8 flex flex-col gap-4">
             {bookings.map((booking) => {
-              const listing = getListingById(booking.listingId);
+              const listing = listingsById[booking.listingId];
               const title = listing ? localize(listing.title, locale) : booking.listingId;
 
               const card = (

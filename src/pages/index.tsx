@@ -18,9 +18,10 @@ interface HomeProps {
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   return {
     props: {
-      featured: getFeaturedListings(8),
-      categories: getCategories(),
+      featured: await getFeaturedListings(8),
+      categories: await getCategories(),
     },
+    revalidate: 60,
   };
 };
 
