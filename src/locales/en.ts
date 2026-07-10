@@ -151,6 +151,7 @@ export const en: Dictionary = {
       submit: "Confirm booking",
       submitting: "Booking…",
       error: "We couldn't create your booking. Please try again.",
+      unavailable: "Those dates are no longer available. Please pick another range.",
     },
     confirm: {
       title: "Booking confirmed!",

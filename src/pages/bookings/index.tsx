@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { enUS, ru as ruLocale } from "date-fns/locale";
 
 import type { Booking, Listing } from "@/types";
-import { getStoredBookings } from "@/lib/bookings";
+import { getStoredBookingIds } from "@/lib/bookings";
 import { formatPrice } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
 import { cn } from "@/lib/utils";
@@ -33,8 +33,25 @@ export default function MyBookingsPage() {
   const dfLocale = locale === "ru" ? ruLocale : enUS;
 
   useEffect(() => {
-    setBookings(getStoredBookings());
-    setReady(true);
+    const ids = getStoredBookingIds();
+    if (ids.length === 0) {
+      setReady(true);
+      return;
+    }
+    let active = true;
+    fetch(`/api/bookings?ids=${ids.map(encodeURIComponent).join(",")}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Booking[]) => {
+        if (!active) return;
+        setBookings(data);
+        setReady(true);
+      })
+      .catch(() => {
+        if (active) setReady(true);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {

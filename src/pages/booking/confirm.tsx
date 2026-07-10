@@ -7,7 +7,6 @@ import { format } from "date-fns";
 import { enUS, ru as ruLocale } from "date-fns/locale";
 
 import type { Booking, Listing } from "@/types";
-import { getStoredBooking } from "@/lib/bookings";
 import { formatPrice } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
 import { Button } from "@/components/ui/button";
@@ -36,8 +35,24 @@ export default function BookingConfirmPage() {
   useEffect(() => {
     if (!router.isReady) return;
     const id = typeof router.query.id === "string" ? router.query.id : undefined;
-    setBooking(id ? getStoredBooking(id) : undefined);
-    setReady(true);
+    if (!id) {
+      setReady(true);
+      return;
+    }
+    let active = true;
+    fetch(`/api/bookings?ids=${encodeURIComponent(id)}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Booking[]) => {
+        if (!active) return;
+        setBooking(data[0]);
+        setReady(true);
+      })
+      .catch(() => {
+        if (active) setReady(true);
+      });
+    return () => {
+      active = false;
+    };
   }, [router.isReady, router.query.id]);
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
 
 import type { Booking } from "@/types";
-import { saveBooking } from "@/lib/bookings";
+import { rememberBookingId } from "@/lib/bookings";
 import { useTranslation, type Dictionary } from "@/locales";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,13 +62,17 @@ export function BookingForm({
         }),
       });
 
+      if (response.status === 409) {
+        setServerError(t.booking.form.unavailable);
+        return;
+      }
       if (!response.ok) {
         setServerError(t.booking.form.error);
         return;
       }
 
       const booking = (await response.json()) as Booking;
-      saveBooking(booking);
+      rememberBookingId(booking.id);
       router.push({ pathname: "/booking/confirm", query: { id: booking.id } });
     } catch {
       setServerError(t.booking.form.error);
