@@ -1,10 +1,7 @@
 import type { Listing } from "@/types";
+import { galleryForCategory } from "./images";
 
-/** Build a stable gallery of placeholder photos for a listing seed. */
-const gallery = (seed: string, count = 5): string[] =>
-  Array.from({ length: count }, (_, i) => `https://picsum.photos/seed/${seed}-${i + 1}/1200/800`);
-
-export const listings: Listing[] = [
+const baseListings: Listing[] = [
   {
     id: "l1",
     slug: "seaside-villa-bali",
@@ -33,7 +30,7 @@ export const listings: Listing[] = [
     beds: 5,
     bathrooms: 3,
     amenityKeys: ["wifi", "pool", "kitchen", "ac", "parking", "seaView", "petFriendly"],
-    images: gallery("seaside-villa-bali"),
+    images: [],
     hostId: "h1",
   },
   {
@@ -64,7 +61,7 @@ export const listings: Listing[] = [
     beds: 2,
     bathrooms: 1,
     amenityKeys: ["wifi", "kitchen", "ac", "tv", "workspace", "balcony"],
-    images: gallery("downtown-loft-barcelona"),
+    images: [],
     hostId: "h2",
   },
   {
@@ -95,7 +92,7 @@ export const listings: Listing[] = [
     beds: 4,
     bathrooms: 2,
     amenityKeys: ["wifi", "kitchen", "heating", "fireplace", "hotTub", "parking"],
-    images: gallery("alpine-chalet-zermatt"),
+    images: [],
     hostId: "h4",
   },
   {
@@ -126,7 +123,7 @@ export const listings: Listing[] = [
     beds: 3,
     bathrooms: 1,
     amenityKeys: ["wifi", "kitchen", "heating", "fireplace", "parking", "petFriendly"],
-    images: gallery("lakeside-cabin-hallstatt"),
+    images: [],
     hostId: "h3",
   },
   {
@@ -157,7 +154,7 @@ export const listings: Listing[] = [
     beds: 3,
     bathrooms: 2,
     amenityKeys: ["wifi", "pool", "ac", "breakfast", "balcony"],
-    images: gallery("riad-marrakech"),
+    images: [],
     hostId: "h6",
   },
   {
@@ -188,7 +185,7 @@ export const listings: Listing[] = [
     beds: 1,
     bathrooms: 1,
     amenityKeys: ["wifi", "ac", "breakfast", "seaView", "petFriendly"],
-    images: gallery("beach-bungalow-phuket"),
+    images: [],
     hostId: "h5",
   },
   {
@@ -219,7 +216,7 @@ export const listings: Listing[] = [
     beds: 5,
     bathrooms: 3,
     amenityKeys: ["wifi", "kitchen", "pool", "parking", "fireplace", "petFriendly"],
-    images: gallery("tuscan-farmhouse"),
+    images: [],
     hostId: "h8",
   },
   {
@@ -250,7 +247,7 @@ export const listings: Listing[] = [
     beds: 2,
     bathrooms: 1,
     amenityKeys: ["wifi", "kitchen", "ac", "tv", "workspace", "washer"],
-    images: gallery("modern-apartment-tokyo"),
+    images: [],
     hostId: "h5",
   },
   {
@@ -281,7 +278,7 @@ export const listings: Listing[] = [
     beds: 4,
     bathrooms: 2,
     amenityKeys: ["wifi", "kitchen", "heating", "fireplace", "hotTub", "parking"],
-    images: gallery("mountain-lodge-banff"),
+    images: [],
     hostId: "h4",
   },
   {
@@ -312,7 +309,7 @@ export const listings: Listing[] = [
     beds: 2,
     bathrooms: 2,
     amenityKeys: ["wifi", "pool", "ac", "seaView", "balcony", "breakfast"],
-    images: gallery("santorini-cave-house"),
+    images: [],
     hostId: "h1",
   },
   {
@@ -343,7 +340,7 @@ export const listings: Listing[] = [
     beds: 3,
     bathrooms: 2,
     amenityKeys: ["wifi", "kitchen", "heating", "fireplace", "parking", "petFriendly"],
-    images: gallery("cotswolds-cottage"),
+    images: [],
     hostId: "h8",
   },
   {
@@ -374,7 +371,7 @@ export const listings: Listing[] = [
     beds: 4,
     bathrooms: 1,
     amenityKeys: ["wifi", "kitchen", "heating", "tv", "balcony", "parking"],
-    images: gallery("ski-apartment-chamonix"),
+    images: [],
     hostId: "h2",
   },
   {
@@ -405,7 +402,7 @@ export const listings: Listing[] = [
     beds: 5,
     bathrooms: 3,
     amenityKeys: ["wifi", "kitchen", "pool", "seaView", "parking", "breakfast"],
-    images: gallery("lake-como-villa"),
+    images: [],
     hostId: "h6",
   },
   {
@@ -436,10 +433,22 @@ export const listings: Listing[] = [
     beds: 2,
     bathrooms: 1,
     amenityKeys: ["wifi", "kitchen", "ac", "tv", "workspace", "balcony"],
-    images: gallery("lisbon-tile-loft"),
+    images: [],
     hostId: "h7",
   },
 ];
+
+/**
+ * Assign category-appropriate photos, rotating each category's pool per listing
+ * so stays sharing a category still get distinct covers.
+ */
+const categoryImageOffset: Record<string, number> = {};
+export const listings: Listing[] = baseListings.map((listing) => {
+  const category = listing.categoryKeys[0] ?? "city";
+  const offset = categoryImageOffset[category] ?? 0;
+  categoryImageOffset[category] = offset + 1;
+  return { ...listing, images: galleryForCategory(category, offset) };
+});
 
 export const listingById = new Map(listings.map((l) => [l.id, l]));
 export const listingBySlug = new Map(listings.map((l) => [l.slug, l]));
