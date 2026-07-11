@@ -6,9 +6,7 @@ import { CircleCheck } from "lucide-react";
 import { format } from "date-fns";
 import { enUS, ru as ruLocale } from "date-fns/locale";
 
-import type { Booking } from "@/types";
-import { getListingById } from "@/lib/data";
-import { getStoredBooking } from "@/lib/bookings";
+import type { Booking, Listing } from "@/types";
 import { formatPrice } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
 import { Button } from "@/components/ui/button";
@@ -31,18 +29,48 @@ export default function BookingConfirmPage() {
   const router = useRouter();
   const { t, locale } = useTranslation();
   const [booking, setBooking] = useState<Booking | undefined>(undefined);
+  const [listing, setListing] = useState<Listing | undefined>(undefined);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!router.isReady) return;
     const id = typeof router.query.id === "string" ? router.query.id : undefined;
-    setBooking(id ? getStoredBooking(id) : undefined);
-    setReady(true);
+    if (!id) {
+      setReady(true);
+      return;
+    }
+    let active = true;
+    fetch(`/api/bookings?ids=${encodeURIComponent(id)}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Booking[]) => {
+        if (!active) return;
+        setBooking(data[0]);
+        setReady(true);
+      })
+      .catch(() => {
+        if (active) setReady(true);
+      });
+    return () => {
+      active = false;
+    };
   }, [router.isReady, router.query.id]);
+
+  useEffect(() => {
+    if (!booking) return;
+    let active = true;
+    fetch(`/api/listings/${booking.listingId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data) setListing(data.listing as Listing);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [booking]);
 
   const dfLocale = locale === "ru" ? ruLocale : enUS;
   const formatDate = (value: string) => format(new Date(value), "d MMM yyyy", { locale: dfLocale });
-  const listing = booking ? getListingById(booking.listingId) : undefined;
 
   return (
     <>

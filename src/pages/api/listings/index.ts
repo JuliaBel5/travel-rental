@@ -21,7 +21,7 @@ function numberParam(value: string | string[] | undefined): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Listing[] | { error: string }>,
 ) {
@@ -41,5 +41,5 @@ export default function handler(
     sort: firstParam(req.query.sort) as SortOption | undefined,
   };
 
-  res.status(200).json(getAllListings(filters));
+  res.status(200).json(await getAllListings(filters));
 }

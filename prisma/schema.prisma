@@ -1,0 +1,101 @@
+// Prisma 6 schema. Localized fields ({ ru, en }) and structured location are
+// stored as Json; arrays (images / amenityKeys / categoryKeys) as Postgres String[].
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model Host {
+  id          String    @id
+  name        String
+  avatar      String
+  joinedYear  Int
+  isSuperhost Boolean   @default(false)
+  listings    Listing[]
+}
+
+model Amenity {
+  key   String @id
+  label Json
+}
+
+model Category {
+  key   String @id
+  label Json
+  icon  String
+}
+
+model Listing {
+  id             String    @id
+  slug           String    @unique
+  title          Json
+  description    Json
+  type           String
+  categoryKeys   String[]
+  location       Json
+  pricePerNight  Int
+  currency       String
+  cleaningFee    Int
+  serviceFeeRate Float
+  rating         Float
+  reviewsCount   Int
+  maxGuests      Int
+  bedrooms       Int
+  beds           Int
+  bathrooms      Int
+  amenityKeys    String[]
+  images         String[]
+  hostId         String
+  host           Host      @relation(fields: [hostId], references: [id])
+  reviews        Review[]
+  bookings       Booking[]
+}
+
+model Review {
+  id        String  @id
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  author    String
+  avatar    String
+  rating    Int
+  date      String
+  text      Json
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  listingId   String
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  checkIn     DateTime @db.Date
+  checkOut    DateTime @db.Date
+  guests      Int
+  guestName   String
+  guestEmail  String
+  nights      Int
+  subtotal    Int
+  cleaningFee Int
+  serviceFee  Int
+  total       Int
+  currency    String
+  createdAt   DateTime @default(now())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([listingId, checkIn, checkOut])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  image        String?
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  bookings     Booking[]
+}

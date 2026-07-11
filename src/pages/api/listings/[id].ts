@@ -9,7 +9,7 @@ export interface ListingDetailResponse {
   reviews: Review[];
 }
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ListingDetailResponse | { error: string }>,
 ) {
@@ -19,7 +19,7 @@ export default function handler(
   }
 
   const id = Array.isArray(req.query.id) ? req.query.id[0] : req.query.id;
-  const listing = id ? (getListingById(id) ?? getListingBySlug(id)) : undefined;
+  const listing = id ? ((await getListingById(id)) ?? (await getListingBySlug(id))) : undefined;
 
   if (!listing) {
     return res.status(404).json({ error: "Listing not found" });
@@ -27,7 +27,7 @@ export default function handler(
 
   res.status(200).json({
     listing,
-    host: getHost(listing.hostId) ?? null,
-    reviews: getReviews(listing.id),
+    host: (await getHost(listing.hostId)) ?? null,
+    reviews: await getReviews(listing.id),
   });
 }

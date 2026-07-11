@@ -1,9 +1,23 @@
-import { amenities } from "@/data/amenities";
-import { categories } from "@/data/categories";
-import { hostById, hosts } from "@/data/hosts";
-import { listingById, listingBySlug, listings } from "@/data/listings";
-import { reviewsForListing } from "@/data/reviews";
-import type { Amenity, Category, Host, Listing, Review } from "@/types";
+import type {
+  Amenity as DbAmenity,
+  Category as DbCategory,
+  Host as DbHost,
+  Listing as DbListing,
+  Review as DbReview,
+} from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
+import type {
+  Amenity,
+  Category,
+  CurrencyCode,
+  Host,
+  Listing,
+  ListingLocation,
+  Localized,
+  PropertyType,
+  Review,
+} from "@/types";
 
 export type SortOption = "recommended" | "price_asc" | "price_desc" | "rating_desc";
 
@@ -20,6 +34,65 @@ export interface ListingFilters {
   amenities?: string[];
   sort?: SortOption;
 }
+
+// ---- row → domain mappers (Prisma Json fields cast to typed shapes) ----
+
+function toListing(row: DbListing): Listing {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title as unknown as Localized,
+    description: row.description as unknown as Localized,
+    type: row.type as PropertyType,
+    categoryKeys: row.categoryKeys,
+    location: row.location as unknown as ListingLocation,
+    pricePerNight: row.pricePerNight,
+    currency: row.currency as CurrencyCode,
+    cleaningFee: row.cleaningFee,
+    serviceFeeRate: row.serviceFeeRate,
+    rating: row.rating,
+    reviewsCount: row.reviewsCount,
+    maxGuests: row.maxGuests,
+    bedrooms: row.bedrooms,
+    beds: row.beds,
+    bathrooms: row.bathrooms,
+    amenityKeys: row.amenityKeys,
+    images: row.images,
+    hostId: row.hostId,
+  };
+}
+
+function toReview(row: DbReview): Review {
+  return {
+    id: row.id,
+    listingId: row.listingId,
+    author: row.author,
+    avatar: row.avatar,
+    rating: row.rating,
+    date: row.date,
+    text: row.text as unknown as Localized,
+  };
+}
+
+function toHost(row: DbHost): Host {
+  return {
+    id: row.id,
+    name: row.name,
+    avatar: row.avatar,
+    joinedYear: row.joinedYear,
+    isSuperhost: row.isSuperhost,
+  };
+}
+
+function toCategory(row: DbCategory): Category {
+  return { key: row.key, label: row.label as unknown as Localized, icon: row.icon };
+}
+
+function toAmenity(row: DbAmenity): Amenity {
+  return { key: row.key, label: row.label as unknown as Localized };
+}
+
+// ---- in-memory filtering/sorting (dataset is small; keeps behavior identical) ----
 
 function matchesLocation(listing: Listing, query: string): boolean {
   const haystack = [
@@ -47,8 +120,11 @@ function sortListings(items: Listing[], sort: SortOption = "recommended"): Listi
   }
 }
 
-export function getAllListings(filters: ListingFilters = {}): Listing[] {
-  let result = listings;
+// ---- accessors (async, DB-backed) ----
+
+export async function getAllListings(filters: ListingFilters = {}): Promise<Listing[]> {
+  const rows = await prisma.listing.findMany();
+  let result = rows.map(toListing);
 
   if (filters.location) {
     result = result.filter((l) => matchesLocation(l, filters.location as string));
@@ -75,38 +151,47 @@ export function getAllListings(filters: ListingFilters = {}): Listing[] {
   return sortListings(result, filters.sort);
 }
 
-export function getListingById(id: string): Listing | undefined {
-  return listingById.get(id);
+export async function getListingById(id: string): Promise<Listing | undefined> {
+  const row = await prisma.listing.findUnique({ where: { id } });
+  return row ? toListing(row) : undefined;
 }
 
-export function getListingBySlug(slug: string): Listing | undefined {
-  return listingBySlug.get(slug);
+export async function getListingBySlug(slug: string): Promise<Listing | undefined> {
+  const row = await prisma.listing.findUnique({ where: { slug } });
+  return row ? toListing(row) : undefined;
 }
 
-export function getFeaturedListings(limit = 6): Listing[] {
-  return [...listings].sort((a, b) => b.rating - a.rating).slice(0, limit);
+export async function getFeaturedListings(limit = 6): Promise<Listing[]> {
+  const rows = await prisma.listing.findMany({ orderBy: { rating: "desc" }, take: limit });
+  return rows.map(toListing);
 }
 
-export function getAllListingSlugs(): string[] {
-  return listings.map((l) => l.slug);
+export async function getAllListingSlugs(): Promise<string[]> {
+  const rows = await prisma.listing.findMany({ select: { slug: true } });
+  return rows.map((r) => r.slug);
 }
 
-export function getHost(id: string): Host | undefined {
-  return hostById.get(id);
+export async function getHost(id: string): Promise<Host | undefined> {
+  const row = await prisma.host.findUnique({ where: { id } });
+  return row ? toHost(row) : undefined;
 }
 
-export function getReviews(listingId: string): Review[] {
-  return reviewsForListing(listingId);
+export async function getReviews(listingId: string): Promise<Review[]> {
+  const rows = await prisma.review.findMany({ where: { listingId } });
+  return rows.map(toReview);
 }
 
-export function getCategories(): Category[] {
-  return categories;
+export async function getCategories(): Promise<Category[]> {
+  const rows = await prisma.category.findMany({ orderBy: { key: "asc" } });
+  return rows.map(toCategory);
 }
 
-export function getAmenities(): Amenity[] {
-  return amenities;
+export async function getAmenities(): Promise<Amenity[]> {
+  const rows = await prisma.amenity.findMany({ orderBy: { key: "asc" } });
+  return rows.map(toAmenity);
 }
 
-export function getAllHosts(): Host[] {
-  return hosts;
+export async function getAllHosts(): Promise<Host[]> {
+  const rows = await prisma.host.findMany();
+  return rows.map(toHost);
 }

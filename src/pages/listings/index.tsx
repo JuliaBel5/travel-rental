@@ -111,10 +111,10 @@ export const getServerSideProps: GetServerSideProps<CatalogProps> = async ({ que
 
   return {
     props: {
-      listings: getAllListings(filters),
+      listings: await getAllListings(filters),
       filters,
-      categories: getCategories(),
-      amenities: getAmenities(),
+      categories: await getCategories(),
+      amenities: await getAmenities(),
       propertyTypes: PROPERTY_TYPES,
     },
   };

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
+import { AuthMenu } from "./AuthMenu";
 
 export function Header() {
   const { t } = useTranslation();
@@ -49,9 +51,7 @@ export function Header() {
             </SheetContent>
           </Sheet>
 
-          <Link href="/" className="text-lg font-semibold tracking-tight">
-            {t.common.appName}
-          </Link>
+          <Logo />
         </div>
 
         <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
@@ -69,6 +69,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <LanguageSwitcher />
+          <AuthMenu />
         </div>
       </div>
     </header>

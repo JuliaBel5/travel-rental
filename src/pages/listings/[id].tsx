@@ -2,13 +2,7 @@ import type { GetStaticPaths, GetStaticProps } from "next";
 import { Star } from "lucide-react";
 
 import type { Amenity, Host, Listing, Review } from "@/types";
-import {
-  getAllListingSlugs,
-  getAmenities,
-  getHost,
-  getListingBySlug,
-  getReviews,
-} from "@/lib/data";
+import { getAmenities, getHost, getListingBySlug, getReviews } from "@/lib/data";
 import { localize, useTranslation, type Locale } from "@/locales";
 import { Separator } from "@/components/ui/separator";
 import { Gallery } from "@/components/listings/Gallery";
@@ -39,7 +33,8 @@ function pluralForm(
 }
 
 export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: getAllListingSlugs().map((slug) => ({ params: { id: slug } })),
+  // Paths are generated on demand (DB-backed) to avoid querying the database at build time.
+  paths: [],
   fallback: "blocking",
 });
 
@@ -49,7 +44,7 @@ export const getStaticProps: GetStaticProps<DetailProps> = async ({ params, loca
   void locale;
 
   const slug = typeof params?.id === "string" ? params.id : undefined;
-  const listing = slug ? getListingBySlug(slug) : undefined;
+  const listing = slug ? await getListingBySlug(slug) : undefined;
   if (!listing) {
     return { notFound: true };
   }
@@ -57,10 +52,11 @@ export const getStaticProps: GetStaticProps<DetailProps> = async ({ params, loca
   return {
     props: {
       listing,
-      host: getHost(listing.hostId) ?? null,
-      reviews: getReviews(listing.id),
-      amenities: getAmenities(),
+      host: (await getHost(listing.hostId)) ?? null,
+      reviews: await getReviews(listing.id),
+      amenities: await getAmenities(),
     },
+    revalidate: 60,
   };
 };
 
