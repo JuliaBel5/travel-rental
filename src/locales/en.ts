@@ -202,6 +202,10 @@ export const en: Dictionary = {
       emptyTitle: "No bookings yet",
       emptySubtitle: "Find a stay and book your first trip.",
       browseStays: "Browse stays",
+      cancel: "Cancel",
+      confirmCancel: "Really cancel?",
+      cancelling: "Cancelling…",
+      cancelError: "Couldn't cancel. Please try again.",
     },
   },
   footer: {

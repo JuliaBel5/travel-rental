@@ -199,6 +199,10 @@ export const ru = {
       emptyTitle: "Пока нет бронирований",
       emptySubtitle: "Найдите жильё и забронируйте свою первую поездку.",
       browseStays: "Смотреть жильё",
+      cancel: "Отменить",
+      confirmCancel: "Точно отменить?",
+      cancelling: "Отменяем…",
+      cancelError: "Не удалось отменить. Попробуйте ещё раз.",
     },
   },
   footer: {
