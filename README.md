@@ -19,13 +19,21 @@ A full-stack, bilingual (RU / EN) travel-rental web app. · Полнофункц
 
 A full-stack, bilingual (RU / EN) travel-rental web app — browse unique stays, check real-time availability, and book after signing in. Built with the **Next.js Pages Router**, a **PostgreSQL** database via **Prisma**, and email/password **authentication**.
 
+### Screenshots
+
+| Home | Catalog (dark mode) |
+|------|---------------------|
+| ![Home page — hero and search](docs/screenshots/home-light.png) | ![Catalog with filters, dark theme](docs/screenshots/catalog-dark.png) |
+
+![Listing page — gallery and booking widget](docs/screenshots/listing-light.png)
+
 ### Features
 
 - **Catalog & search** — filter by price, property type, amenities and guests; sort by price or rating.
 - **Listing details** — image gallery, amenities, host card, guest reviews, and a location map.
-- **Real bookings** — reservations are persisted in PostgreSQL with **availability checks** (overlapping dates are rejected with `409`).
-- **Authentication** — email/password sign-up & sign-in (NextAuth Credentials, JWT sessions, `bcrypt`-hashed passwords).
-- **Account-scoped bookings** — booking requires sign-in; each user only sees their own reservations on **My bookings**.
+- **Real bookings** — persisted in PostgreSQL; **double-booking is impossible by construction** (Postgres `EXCLUDE` constraint, conflicts surface as `409`), and already-booked nights are **grayed out in the date picker**.
+- **Authentication** — email/password sign-up & sign-in (NextAuth Credentials, JWT sessions, `bcrypt`-hashed passwords, **rate-limited** login and registration).
+- **Account-scoped bookings** — booking requires sign-in; **My bookings** shows only your reservations and lets you **cancel upcoming stays**.
 - **Transparent pricing** — per-night subtotal, cleaning fee and service fee broken down before you confirm.
 - **Internationalization** — full RU / EN dictionaries that are kept in sync at compile time via TypeScript.
 - **Light / dark theme** — system-aware, toggleable, no flash on load.
@@ -151,8 +159,8 @@ src/
 ### How it works
 
 - **Data access** — all reads/writes go through [`src/lib/data.ts`](src/lib/data.ts), which queries Prisma and maps rows to the app's domain types.
-- **Availability** — creating a booking runs an overlap query on the `(listingId, checkIn, checkOut)` index; conflicts return `409` and surface a friendly message in the UI.
-- **Auth** — [`src/lib/auth.ts`](src/lib/auth.ts) defines the NextAuth Credentials provider; sessions are JWT-based and carry the user id. `/booking` and `/bookings` gate access in `getServerSideProps`.
+- **Availability** — the picker disables taken nights (`/api/listings/[id]/availability`), the API pre-checks overlaps for a friendly `409`, and a **btree_gist `EXCLUDE` constraint** guarantees no double-booking even under concurrent requests (verified by [`scripts/race-test.ts`](scripts/race-test.ts)).
+- **Auth** — [`src/lib/auth.ts`](src/lib/auth.ts) defines the NextAuth Credentials provider; sessions are JWT-based and carry the user id. `/booking` and `/bookings` gate access in `getServerSideProps`. Login counts only failed attempts (per IP + account); registration is capped per IP.
 - **i18n** — `en` is typed against the shape of `ru` (`Dictionary`), so a missing or renamed key is a compile error rather than a runtime surprise.
 
 ### Deployment
@@ -172,13 +180,21 @@ Deployed on **Vercel** with a **Neon** Postgres database.
 
 Полнофункциональное двуязычное (RU / EN) веб-приложение для аренды жилья для путешествий — просматривайте уникальные варианты, проверяйте доступность дат в реальном времени и бронируйте после входа в аккаунт. Построено на **Next.js Pages Router**, базе данных **PostgreSQL** через **Prisma** и авторизации по email/паролю.
 
+### Скриншоты
+
+| Главная | Каталог (тёмная тема) |
+|---------|----------------------|
+| ![Главная — hero и поиск](docs/screenshots/home-light.png) | ![Каталог с фильтрами, тёмная тема](docs/screenshots/catalog-dark.png) |
+
+![Страница объекта — галерея и виджет бронирования](docs/screenshots/listing-light.png)
+
 ### Возможности
 
 - **Каталог и поиск** — фильтры по цене, типу жилья, удобствам и числу гостей; сортировка по цене или рейтингу.
 - **Страница объекта** — галерея, удобства, карточка хозяина, отзывы гостей и карта расположения.
-- **Реальные брони** — бронирования сохраняются в PostgreSQL с **проверкой доступности** (пересекающиеся даты отклоняются с кодом `409`).
-- **Авторизация** — регистрация и вход по email/паролю (NextAuth Credentials, JWT-сессии, пароли хешируются `bcrypt`).
-- **Брони по аккаунту** — для бронирования нужен вход; каждый пользователь видит только свои брони в разделе «Мои бронирования».
+- **Реальные брони** — хранятся в PostgreSQL; **двойное бронирование невозможно по построению** (Postgres `EXCLUDE`-констрейнт, конфликты — `409`), а занятые ночи **гаснут прямо в календаре**.
+- **Авторизация** — регистрация и вход по email/паролю (NextAuth Credentials, JWT-сессии, пароли хешируются `bcrypt`, вход и регистрация **защищены rate-limit**).
+- **Брони по аккаунту** — для бронирования нужен вход; в «Моих бронированиях» только свои брони и **отмена предстоящих поездок**.
 - **Прозрачная цена** — стоимость за ночи, плата за уборку и сервисный сбор показываются до подтверждения.
 - **Интернационализация** — полные словари RU / EN, синхронность которых гарантируется типами на этапе компиляции.
 - **Светлая / тёмная тема** — учитывает системную, переключается, без мигания при загрузке.
@@ -304,8 +320,8 @@ src/
 ### Как это устроено
 
 - **Доступ к данным** — все чтения/записи идут через [`src/lib/data.ts`](src/lib/data.ts), который обращается к Prisma и маппит строки в доменные типы приложения.
-- **Доступность** — при создании брони выполняется запрос на пересечение по индексу `(listingId, checkIn, checkOut)`; конфликты возвращают `409` и показывают понятное сообщение в интерфейсе.
-- **Авторизация** — [`src/lib/auth.ts`](src/lib/auth.ts) описывает провайдер Credentials; сессии на JWT и несут id пользователя. `/booking` и `/bookings` проверяют доступ в `getServerSideProps`.
+- **Доступность** — календарь гасит занятые ночи (`/api/listings/[id]/availability`), API пре-чеком возвращает дружелюбный `409`, а **btree_gist `EXCLUDE`-констрейнт** гарантирует отсутствие двойных броней даже при одновременных запросах (проверено скриптом [`scripts/race-test.ts`](scripts/race-test.ts)).
+- **Авторизация** — [`src/lib/auth.ts`](src/lib/auth.ts) описывает провайдер Credentials; сессии на JWT и несут id пользователя. `/booking` и `/bookings` проверяют доступ в `getServerSideProps`. На входе считаются только неудачные попытки (по IP + аккаунту); регистрация ограничена по IP.
 - **i18n** — `en` типизирован по форме `ru` (`Dictionary`), поэтому пропущенный или переименованный ключ — ошибка компиляции, а не сюрприз в рантайме.
 
 ### Деплой
