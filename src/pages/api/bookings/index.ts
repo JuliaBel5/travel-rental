@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { Booking as DbBooking } from "@prisma/client";
 
+import { getServerSession } from "next-auth/next";
+
+import { authOptions } from "@/lib/auth";
 import { getListingById, getListingBySlug } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { computePrice } from "@/lib/pricing";
@@ -30,7 +33,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Booking | Booking[] | { error: string }>,
 ) {
-  // GET /api/bookings?ids=a,b,c → the requested bookings (used by "My bookings").
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user?.id) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  const userId = session.user.id;
+
+  // GET /api/bookings?ids=a,b,c → the caller's own requested bookings.
   if (req.method === "GET") {
     const raw = Array.isArray(req.query.ids) ? req.query.ids[0] : req.query.ids;
     const ids = raw
@@ -41,7 +50,7 @@ export default async function handler(
       : [];
     if (ids.length === 0) return res.status(200).json([]);
     const rows = await prisma.booking.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, userId },
       orderBy: { createdAt: "desc" },
     });
     return res.status(200).json(rows.map(toBooking));
@@ -52,8 +61,8 @@ export default async function handler(
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { listingId, checkIn, checkOut, guests, guestName, guestEmail } = req.body ?? {};
-  if (!listingId || !checkIn || !checkOut || !guestName || !guestEmail) {
+  const { listingId, checkIn, checkOut, guests } = req.body ?? {};
+  if (!listingId || !checkIn || !checkOut) {
     return res.status(400).json({ error: "Missing required booking fields" });
   }
 
@@ -89,8 +98,9 @@ export default async function handler(
         checkIn: checkInDate,
         checkOut: checkOutDate,
         guests: Number(guests) > 0 ? Number(guests) : 1,
-        guestName,
-        guestEmail,
+        guestName: session.user.name ?? session.user.email ?? "",
+        guestEmail: session.user.email ?? "",
+        userId,
         nights: price.nights,
         subtotal: price.subtotal,
         cleaningFee: price.cleaningFee,

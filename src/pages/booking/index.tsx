@@ -2,8 +2,11 @@ import Image from "next/image";
 import type { GetServerSideProps } from "next";
 import { format } from "date-fns";
 import { enUS, ru as ruLocale } from "date-fns/locale";
+import { getServerSession } from "next-auth/next";
+import { useSession } from "next-auth/react";
 
 import type { Listing } from "@/types";
+import { authOptions } from "@/lib/auth";
 import { getListingById, getListingBySlug } from "@/lib/data";
 import { nightsBetween } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
@@ -42,7 +45,14 @@ function pluralForm(
   return forms.many;
 }
 
-export const getServerSideProps: GetServerSideProps<BookingPageProps> = async ({ query }) => {
+export const getServerSideProps: GetServerSideProps<BookingPageProps> = async (ctx) => {
+  const session = await getServerSession(ctx.req, ctx.res, authOptions);
+  if (!session) {
+    const callbackUrl = encodeURIComponent(ctx.resolvedUrl);
+    return { redirect: { destination: `/login?callbackUrl=${callbackUrl}`, permanent: false } };
+  }
+
+  const { query } = ctx;
   const id = firstParam(query.id);
   const checkIn = firstParam(query.checkIn);
   const checkOut = firstParam(query.checkOut);
@@ -58,6 +68,7 @@ export const getServerSideProps: GetServerSideProps<BookingPageProps> = async ({
 
 export default function BookingPage({ listing, checkIn, checkOut, guests }: BookingPageProps) {
   const { t, locale } = useTranslation();
+  const { data: session } = useSession();
   const dfLocale = locale === "ru" ? ruLocale : enUS;
 
   const title = localize(listing.title, locale);
@@ -80,10 +91,18 @@ export default function BookingPage({ listing, checkIn, checkOut, guests }: Book
         </h1>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4">
             <h2 className="font-heading text-lg font-medium text-foreground">
-              {t.booking.form.heading}
+              {t.booking.reviewTitle}
             </h2>
+            {session?.user && (
+              <p className="text-sm text-muted-foreground">
+                {t.booking.bookingAs}{" "}
+                <span className="font-medium text-foreground">
+                  {session.user.name ?? session.user.email}
+                </span>
+              </p>
+            )}
             <BookingForm
               listingId={listing.id}
               checkIn={checkIn}

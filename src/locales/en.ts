@@ -157,6 +157,8 @@ export const en: Dictionary = {
     },
   },
   booking: {
+    reviewTitle: "Confirm your booking",
+    bookingAs: "Booking as",
     reserve: "Reserve",
     pickDates: "Add dates to see the total",
     cleaningFee: "Cleaning fee",

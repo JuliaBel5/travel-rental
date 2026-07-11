@@ -43,3 +43,7 @@ next-env.d.ts
 
 # project internal (planning / orchestration)
 .sisyphus/
+
+# local dev/test artifacts
+.playwright-mcp/
+.next-start*.log

@@ -154,6 +154,8 @@ export const ru = {
     },
   },
   booking: {
+    reviewTitle: "Подтверждение брони",
+    bookingAs: "Бронирование от имени",
     reserve: "Забронировать",
     pickDates: "Выберите даты, чтобы увидеть итог",
     cleaningFee: "Плата за уборку",
