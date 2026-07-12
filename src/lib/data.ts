@@ -166,6 +166,16 @@ export async function getFeaturedListings(limit = 6): Promise<Listing[]> {
   return rows.map(toListing);
 }
 
+/** The user's saved listings, most recently saved first. */
+export async function getFavoriteListings(userId: string): Promise<Listing[]> {
+  const rows = await prisma.favorite.findMany({
+    where: { userId },
+    include: { listing: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((row) => toListing(row.listing));
+}
+
 export async function getAllListingSlugs(): Promise<string[]> {
   const rows = await prisma.listing.findMany({ select: { slug: true } });
   return rows.map((r) => r.slug);

@@ -52,9 +52,10 @@ model Listing {
   amenityKeys    String[]
   images         String[]
   hostId         String
-  host           Host      @relation(fields: [hostId], references: [id])
+  host           Host       @relation(fields: [hostId], references: [id])
   reviews        Review[]
   bookings       Booking[]
+  favorites      Favorite[]
 }
 
 model Review {
@@ -91,11 +92,22 @@ model Booking {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   name         String?
   image        String?
   passwordHash String
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime   @default(now())
   bookings     Booking[]
+  favorites    Favorite[]
+}
+
+model Favorite {
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@id([userId, listingId])
 }
