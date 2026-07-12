@@ -33,22 +33,24 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   // newer optimistic state.
   const pending = useRef(new Set<string>());
 
+  // No sync setState here: when signed out, `isFavorite` derives to false and
+  // stale ids are simply unused; a fresh sign-in replaces them via the fetch.
   useEffect(() => {
-    if (!isAuthenticated) {
-      setIds(new Set());
-      return;
-    }
+    if (!isAuthenticated) return;
     const controller = new AbortController();
     fetch("/api/favorites", { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { ids?: string[] } | null) => {
-        if (data?.ids) setIds(new Set(data.ids));
+        setIds(new Set(data?.ids ?? []));
       })
       .catch(() => {});
     return () => controller.abort();
   }, [isAuthenticated]);
 
-  const isFavorite = useCallback((listingId: string) => ids.has(listingId), [ids]);
+  const isFavorite = useCallback(
+    (listingId: string) => isAuthenticated && ids.has(listingId),
+    [ids, isAuthenticated],
+  );
 
   const toggle = useCallback(
     (listingId: string) => {
