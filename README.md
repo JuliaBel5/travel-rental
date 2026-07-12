@@ -37,6 +37,7 @@ A full-stack, bilingual (RU / EN) travel-rental web app — browse unique stays,
 - **Real bookings** — persisted in PostgreSQL; **double-booking is impossible by construction** (Postgres `EXCLUDE` constraint, conflicts surface as `409`), and already-booked nights are **grayed out in the date picker**.
 - **Authentication** — email/password sign-up & sign-in (NextAuth Credentials, JWT sessions, `bcrypt`-hashed passwords, **rate-limited** login and registration).
 - **Account-scoped bookings** — booking requires sign-in; **My bookings** shows only your reservations and lets you **cancel upcoming stays**.
+- **Favorites** — tap the heart on any card to save a stay; your saved list lives at **Favorites** (per account, optimistic UI).
 - **Transparent pricing** — per-night subtotal, cleaning fee and service fee broken down before you confirm.
 - **Internationalization** — full RU / EN dictionaries that are kept in sync at compile time via TypeScript.
 - **Light / dark theme** — system-aware, toggleable, no flash on load.
@@ -200,6 +201,7 @@ Deployed on **Vercel** with a **Neon** Postgres database.
 - **Реальные брони** — хранятся в PostgreSQL; **двойное бронирование невозможно по построению** (Postgres `EXCLUDE`-констрейнт, конфликты — `409`), а занятые ночи **гаснут прямо в календаре**.
 - **Авторизация** — регистрация и вход по email/паролю (NextAuth Credentials, JWT-сессии, пароли хешируются `bcrypt`, вход и регистрация **защищены rate-limit**).
 - **Брони по аккаунту** — для бронирования нужен вход; в «Моих бронированиях» только свои брони и **отмена предстоящих поездок**.
+- **Избранное** — сердечко на карточке сохраняет жильё; список — на странице «Избранное» (по аккаунту, optimistic UI).
 - **Прозрачная цена** — стоимость за ночи, плата за уборку и сервисный сбор показываются до подтверждения.
 - **Интернационализация** — полные словари RU / EN, синхронность которых гарантируется типами на этапе компиляции.
 - **Светлая / тёмная тема** — учитывает системную, переключается, без мигания при загрузке.
