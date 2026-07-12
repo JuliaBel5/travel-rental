@@ -30,30 +30,29 @@ export default function BookingConfirmPage() {
   const { t, locale } = useTranslation();
   const [booking, setBooking] = useState<Booking | undefined>(undefined);
   const [listing, setListing] = useState<Listing | undefined>(undefined);
-  const [ready, setReady] = useState(false);
+  const [fetchDone, setFetchDone] = useState(false);
+
+  const id = typeof router.query.id === "string" ? router.query.id : undefined;
+  // No id → nothing to fetch; otherwise wait for the fetch to settle.
+  const ready = router.isReady && (id ? fetchDone : true);
 
   useEffect(() => {
-    if (!router.isReady) return;
-    const id = typeof router.query.id === "string" ? router.query.id : undefined;
-    if (!id) {
-      setReady(true);
-      return;
-    }
+    if (!router.isReady || !id) return;
     let active = true;
     fetch(`/api/bookings?ids=${encodeURIComponent(id)}`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data: Booking[]) => {
         if (!active) return;
         setBooking(data[0]);
-        setReady(true);
+        setFetchDone(true);
       })
       .catch(() => {
-        if (active) setReady(true);
+        if (active) setFetchDone(true);
       });
     return () => {
       active = false;
     };
-  }, [router.isReady, router.query.id]);
+  }, [router.isReady, id]);
 
   useEffect(() => {
     if (!booking) return;
