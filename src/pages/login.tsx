@@ -26,7 +26,7 @@ export default function LoginPage() {
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (!res || res.error) {
-      setError(t.auth.login.error);
+      setError(res?.error === "RATE_LIMITED" ? t.auth.login.tooMany : t.auth.login.error);
       return;
     }
     router.push(callbackUrl);

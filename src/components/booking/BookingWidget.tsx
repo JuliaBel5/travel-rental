@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import { format } from "date-fns";
-import type { DateRange } from "react-day-picker";
+import { addDays, format, parseISO } from "date-fns";
+import type { DateRange, Matcher } from "react-day-picker";
 
 import type { Listing } from "@/types";
 import { formatPrice, nightsBetween } from "@/lib/pricing";
@@ -18,6 +18,30 @@ export function BookingWidget({ listing, className }: { listing: Listing; classN
 
   const [range, setRange] = useState<DateRange | undefined>(undefined);
   const [guests, setGuests] = useState(1);
+  const [booked, setBooked] = useState<Array<{ checkIn: string; checkOut: string }>>([]);
+
+  // Existing bookings gray out taken nights in the picker. Best-effort: if the
+  // request fails the server still rejects overlaps with a 409 on submit.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/listings/${listing.id}/availability`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.booked) setBooked(data.booked);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [listing.id]);
+
+  // [checkIn, checkOut) → disable nights only; the check-out day stays
+  // selectable as the next guest's check-in.
+  const disabledRanges = useMemo<Matcher[]>(
+    () =>
+      booked
+        .map((b) => ({ from: parseISO(b.checkIn), to: addDays(parseISO(b.checkOut), -1) }))
+        .filter((m) => m.to >= m.from),
+    [booked],
+  );
 
   const checkIn = range?.from ? format(range.from, "yyyy-MM-dd") : undefined;
   const checkOut = range?.to ? format(range.to, "yyyy-MM-dd") : undefined;
@@ -47,7 +71,7 @@ export function BookingWidget({ listing, className }: { listing: Listing; classN
       </div>
 
       <div className="flex flex-col gap-2">
-        <DateRangePicker value={range} onChange={setRange} />
+        <DateRangePicker value={range} onChange={setRange} disabledRanges={disabledRanges} />
         <GuestSelector value={guests} onChange={setGuests} max={listing.maxGuests} />
       </div>
 

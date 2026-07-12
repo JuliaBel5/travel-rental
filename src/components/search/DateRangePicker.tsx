@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { enUS, ru as ruLocale } from "date-fns/locale";
-import type { DateRange } from "react-day-picker";
+import type { DateRange, Matcher } from "react-day-picker";
 
 import { useTranslation } from "@/locales";
 import { cn } from "@/lib/utils";
@@ -29,10 +29,13 @@ export function DateRangePicker({
   value,
   onChange,
   className,
+  disabledRanges,
 }: {
   value: DateRange | undefined;
   onChange: (range: DateRange | undefined) => void;
   className?: string;
+  /** Extra unavailable dates (e.g. existing bookings), on top of past days. */
+  disabledRanges?: Matcher[];
 }) {
   const { t, locale } = useTranslation();
   const dfLocale = locale === "ru" ? ruLocale : enUS;
@@ -69,7 +72,8 @@ export function DateRangePicker({
           onSelect={onChange}
           defaultMonth={value?.from}
           numberOfMonths={months}
-          disabled={{ before: today }}
+          disabled={[{ before: today }, ...(disabledRanges ?? [])]}
+          excludeDisabled
           locale={dfLocale}
           autoFocus
         />

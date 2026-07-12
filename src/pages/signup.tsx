@@ -52,6 +52,10 @@ export default function SignupPage() {
         setServerError(t.auth.signup.emailTaken);
         return;
       }
+      if (res.status === 429) {
+        setServerError(t.auth.signup.tooMany);
+        return;
+      }
       if (!res.ok) {
         setServerError(t.auth.signup.error);
         return;

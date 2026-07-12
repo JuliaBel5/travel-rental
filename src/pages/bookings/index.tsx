@@ -1,5 +1,7 @@
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import type { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { CalendarDays, Users } from "lucide-react";
@@ -11,7 +13,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/pricing";
 import { localize, useTranslation, type Locale } from "@/locales";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 
@@ -22,6 +23,8 @@ interface BookingItem {
   guests: number;
   total: number;
   currency: CurrencyCode;
+  /** Upcoming stays can be cancelled; started/past ones can't. */
+  canCancel: boolean;
   listing: { slug: string; title: Localized; image: string } | null;
 }
 
@@ -58,6 +61,9 @@ export const getServerSideProps: GetServerSideProps<MyBookingsProps> = async (ct
     orderBy: { createdAt: "desc" },
   });
 
+  // Server-side so SSR and hydration agree on what's cancellable.
+  const todayUtc = new Date().toISOString().slice(0, 10);
+
   const bookings: BookingItem[] = rows.map((row) => ({
     id: row.id,
     checkIn: row.checkIn.toISOString().slice(0, 10),
@@ -65,6 +71,7 @@ export const getServerSideProps: GetServerSideProps<MyBookingsProps> = async (ct
     guests: row.guests,
     total: row.total,
     currency: row.currency as CurrencyCode,
+    canCancel: row.checkIn.toISOString().slice(0, 10) > todayUtc,
     listing: row.listing
       ? {
           slug: row.listing.slug,
@@ -76,6 +83,50 @@ export const getServerSideProps: GetServerSideProps<MyBookingsProps> = async (ct
 
   return { props: { bookings } };
 };
+
+/** Two-step destructive action: Cancel → Really cancel? → DELETE. */
+function CancelBookingButton({ bookingId }: { bookingId: string }) {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function cancel() {
+    setPending(true);
+    setFailed(false);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(String(res.status));
+      await router.replace(router.asPath, undefined, { scroll: false });
+    } catch {
+      setFailed(true);
+      setPending(false);
+      setConfirming(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      {confirming ? (
+        <Button
+          variant="destructive"
+          size="sm"
+          disabled={pending}
+          onClick={cancel}
+          onBlur={() => !pending && setConfirming(false)}
+        >
+          {pending ? t.booking.myBookings.cancelling : t.booking.myBookings.confirmCancel}
+        </Button>
+      ) : (
+        <Button variant="outline" size="sm" onClick={() => setConfirming(true)}>
+          {t.booking.myBookings.cancel}
+        </Button>
+      )}
+      {failed && <p className="text-xs text-destructive">{t.booking.myBookings.cancelError}</p>}
+    </div>
+  );
+}
 
 export default function MyBookingsPage({ bookings }: MyBookingsProps) {
   const { t, locale } = useTranslation();
@@ -106,13 +157,8 @@ export default function MyBookingsPage({ bookings }: MyBookingsProps) {
             {bookings.map((item) => {
               const title = item.listing ? localize(item.listing.title, locale) : "";
 
-              const card = (
-                <div
-                  className={cn(
-                    "flex items-center gap-4 rounded-2xl border border-border bg-card p-3",
-                    item.listing && "transition-colors hover:bg-muted/40",
-                  )}
-                >
+              const media = (
+                <>
                   <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted">
                     {item.listing?.image && (
                       <Image
@@ -141,25 +187,30 @@ export default function MyBookingsPage({ bookings }: MyBookingsProps) {
                       </span>
                     </p>
                   </div>
-
-                  <p className="shrink-0 font-semibold text-foreground tabular-nums">
-                    {formatPrice(item.total, item.currency, locale)}
-                  </p>
-                </div>
+                </>
               );
 
               return (
                 <li key={item.id}>
-                  {item.listing ? (
-                    <Link
-                      href={`/listings/${item.listing.slug}`}
-                      className="block rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    >
-                      {card}
-                    </Link>
-                  ) : (
-                    card
-                  )}
+                  <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-3">
+                    {item.listing ? (
+                      <Link
+                        href={`/listings/${item.listing.slug}`}
+                        className="flex min-w-0 flex-1 items-center gap-4 rounded-xl outline-none transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+                      >
+                        {media}
+                      </Link>
+                    ) : (
+                      <div className="flex min-w-0 flex-1 items-center gap-4">{media}</div>
+                    )}
+
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <p className="font-semibold text-foreground tabular-nums">
+                        {formatPrice(item.total, item.currency, locale)}
+                      </p>
+                      {item.canCancel && <CancelBookingButton bookingId={item.id} />}
+                    </div>
+                  </div>
                 </li>
               );
             })}

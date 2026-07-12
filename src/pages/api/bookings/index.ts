@@ -29,6 +29,17 @@ function toBooking(row: DbBooking): Booking {
   };
 }
 
+/**
+ * True when Postgres rejected an insert via the `booking_no_overlap` exclusion
+ * constraint (SQLSTATE 23P01). Prisma has no dedicated error code for
+ * exclusion violations, so we match on the constraint name / SQLSTATE.
+ */
+function isOverlapViolation(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const text = error.message;
+  return text.includes("booking_no_overlap") || text.includes("23P01");
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Booking | Booking[] | { error: string }>,
@@ -79,37 +90,50 @@ export default async function handler(
   const checkInDate = new Date(checkIn);
   const checkOutDate = new Date(checkOut);
 
-  // Availability check + insert in one transaction so overlapping dates can't
-  // both slip through concurrently.
-  const created = await prisma.$transaction(async (tx) => {
-    const overlap = await tx.booking.findFirst({
-      where: {
-        listingId: listing.id,
-        checkIn: { lt: checkOutDate },
-        checkOut: { gt: checkInDate },
-      },
-      select: { id: true },
-    });
-    if (overlap) return null;
+  // Two layers of protection against double-booking:
+  // 1. A pre-check that returns a friendly 409 in the common case. On its own
+  //    it is NOT race-safe: under READ COMMITTED two concurrent requests can
+  //    both pass it and both insert.
+  // 2. The `booking_no_overlap` exclusion constraint (btree_gist) — the actual
+  //    guarantee. If two requests race, Postgres rejects one with 23P01,
+  //    which we translate to the same 409.
+  let created: DbBooking | null;
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      const overlap = await tx.booking.findFirst({
+        where: {
+          listingId: listing.id,
+          checkIn: { lt: checkOutDate },
+          checkOut: { gt: checkInDate },
+        },
+        select: { id: true },
+      });
+      if (overlap) return null;
 
-    return tx.booking.create({
-      data: {
-        listingId: listing.id,
-        checkIn: checkInDate,
-        checkOut: checkOutDate,
-        guests: Number(guests) > 0 ? Number(guests) : 1,
-        guestName: session.user.name ?? session.user.email ?? "",
-        guestEmail: session.user.email ?? "",
-        userId,
-        nights: price.nights,
-        subtotal: price.subtotal,
-        cleaningFee: price.cleaningFee,
-        serviceFee: price.serviceFee,
-        total: price.total,
-        currency: price.currency,
-      },
+      return tx.booking.create({
+        data: {
+          listingId: listing.id,
+          checkIn: checkInDate,
+          checkOut: checkOutDate,
+          guests: Number(guests) > 0 ? Number(guests) : 1,
+          guestName: session.user.name ?? session.user.email ?? "",
+          guestEmail: session.user.email ?? "",
+          userId,
+          nights: price.nights,
+          subtotal: price.subtotal,
+          cleaningFee: price.cleaningFee,
+          serviceFee: price.serviceFee,
+          total: price.total,
+          currency: price.currency,
+        },
+      });
     });
-  });
+  } catch (error) {
+    if (isOverlapViolation(error)) {
+      return res.status(409).json({ error: "Selected dates are not available" });
+    }
+    throw error;
+  }
 
   if (!created) {
     return res.status(409).json({ error: "Selected dates are not available" });
