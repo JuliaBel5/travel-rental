@@ -1,6 +1,7 @@
 # Wanderstay
 
 <p>
+  <a href="https://github.com/JuliaBel5/travel-rental/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JuliaBel5/travel-rental/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white">
@@ -134,6 +135,7 @@ Seed data is generated from the mock sources in [`src/data`](src/data) by [`pris
 | `pnpm build` | Generate the Prisma client and build for production. |
 | `pnpm start` | Run the production build. |
 | `pnpm lint` | Lint with ESLint. |
+| `pnpm test:e2e` | Run the Playwright E2E suite (needs `pnpm build` first). |
 | `pnpm format` | Format with Prettier. |
 | `pnpm prisma db seed` | Seed the database. |
 
@@ -162,6 +164,7 @@ src/
 - **Availability** — the picker disables taken nights (`/api/listings/[id]/availability`), the API pre-checks overlaps for a friendly `409`, and a **btree_gist `EXCLUDE` constraint** guarantees no double-booking even under concurrent requests (verified by [`scripts/race-test.ts`](scripts/race-test.ts)).
 - **Auth** — [`src/lib/auth.ts`](src/lib/auth.ts) defines the NextAuth Credentials provider; sessions are JWT-based and carry the user id. `/booking` and `/bookings` gate access in `getServerSideProps`. Login counts only failed attempts (per IP + account); registration is capped per IP.
 - **i18n** — `en` is typed against the shape of `ru` (`Dictionary`), so a missing or renamed key is a compile error rather than a runtime surprise.
+- **Tests & CI** — the Playwright suite in [`tests/`](tests) covers auth, the full booking lifecycle (including the `409` overlap path and cancellation) and rate limiting; GitHub Actions runs lint, build and the E2E suite against a disposable Postgres on every push and PR.
 
 ### Deployment
 
@@ -295,6 +298,7 @@ pnpm dev
 | `pnpm build` | Сгенерировать Prisma-клиент и собрать продакшн. |
 | `pnpm start` | Запустить продакшн-сборку. |
 | `pnpm lint` | Линтинг ESLint. |
+| `pnpm test:e2e` | Прогнать Playwright E2E-сьюту (сначала `pnpm build`). |
 | `pnpm format` | Форматирование Prettier. |
 | `pnpm prisma db seed` | Наполнить базу данными. |
 
@@ -323,6 +327,7 @@ src/
 - **Доступность** — календарь гасит занятые ночи (`/api/listings/[id]/availability`), API пре-чеком возвращает дружелюбный `409`, а **btree_gist `EXCLUDE`-констрейнт** гарантирует отсутствие двойных броней даже при одновременных запросах (проверено скриптом [`scripts/race-test.ts`](scripts/race-test.ts)).
 - **Авторизация** — [`src/lib/auth.ts`](src/lib/auth.ts) описывает провайдер Credentials; сессии на JWT и несут id пользователя. `/booking` и `/bookings` проверяют доступ в `getServerSideProps`. На входе считаются только неудачные попытки (по IP + аккаунту); регистрация ограничена по IP.
 - **i18n** — `en` типизирован по форме `ru` (`Dictionary`), поэтому пропущенный или переименованный ключ — ошибка компиляции, а не сюрприз в рантайме.
+- **Тесты и CI** — Playwright-сьюта в [`tests/`](tests) покрывает авторизацию, полный цикл брони (включая путь `409` при пересечении и отмену) и rate limiting; GitHub Actions на каждый push и PR гоняет линт, сборку и E2E против одноразового Postgres.
 
 ### Деплой
 
