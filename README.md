@@ -12,6 +12,8 @@
 
 A full-stack, bilingual (RU / EN) travel-rental web app. · Полнофункциональное двуязычное (RU / EN) веб-приложение для аренды жилья.
 
+**🌍 Live demo / Демо:** [travel-rental-ashy.vercel.app](https://travel-rental-ashy.vercel.app)
+
 **Language / Язык:** [English](#english) · [Русский](#русский)
 
 ---
