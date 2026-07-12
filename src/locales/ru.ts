@@ -9,6 +9,7 @@ export const ru = {
   nav: {
     home: "Главная",
     listings: "Каталог",
+    favorites: "Избранное",
     bookings: "Мои бронирования",
     language: "Язык",
     menu: "Меню",
@@ -204,6 +205,13 @@ export const ru = {
       cancelling: "Отменяем…",
       cancelError: "Не удалось отменить. Попробуйте ещё раз.",
     },
+  },
+  favorites: {
+    add: "В избранное",
+    remove: "Убрать из избранного",
+    emptyTitle: "В избранном пока пусто",
+    emptySubtitle: "Нажимайте на сердечко на карточках, чтобы сохранять понравившееся жильё.",
+    browseStays: "Смотреть жильё",
   },
   footer: {
     rights: "Все права защищены",

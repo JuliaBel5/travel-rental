@@ -17,6 +17,7 @@ export function Header() {
   const links = [
     { href: "/", label: t.nav.home },
     { href: "/listings", label: t.nav.listings },
+    { href: "/favorites", label: t.nav.favorites },
     { href: "/bookings", label: t.nav.bookings },
   ];
 

@@ -11,6 +11,7 @@ export const en: Dictionary = {
   nav: {
     home: "Home",
     listings: "Stays",
+    favorites: "Favorites",
     bookings: "My bookings",
     language: "Language",
     menu: "Menu",
@@ -207,6 +208,13 @@ export const en: Dictionary = {
       cancelling: "Cancelling…",
       cancelError: "Couldn't cancel. Please try again.",
     },
+  },
+  favorites: {
+    add: "Save to favorites",
+    remove: "Remove from favorites",
+    emptyTitle: "No favorites yet",
+    emptySubtitle: "Tap the heart on any listing card to save places you love.",
+    browseStays: "Browse stays",
   },
   footer: {
     rights: "All rights reserved",
