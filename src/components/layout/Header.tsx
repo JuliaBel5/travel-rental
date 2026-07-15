@@ -19,16 +19,22 @@ export function Header() {
     { href: "/listings", label: t.nav.listings },
     { href: "/favorites", label: t.nav.favorites },
     { href: "/bookings", label: t.nav.bookings },
+    { href: "/account", label: t.nav.account },
   ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
               render={
-                <Button variant="ghost" size="icon" className="sm:hidden" aria-label={t.nav.menu} />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-foreground/10 lg:hidden dark:hover:bg-foreground/10"
+                  aria-label={t.nav.menu}
+                />
               }
             >
               <Menu />
@@ -55,7 +61,7 @@ export function Header() {
           <Logo />
         </div>
 
-        <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
+        <nav className="hidden items-center gap-6 text-sm text-muted-foreground lg:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -67,7 +73,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-3">
           <ThemeToggle />
           <LanguageSwitcher />
           <AuthMenu />

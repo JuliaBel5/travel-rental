@@ -19,6 +19,7 @@ export function LanguageSwitcher() {
     <Button
       variant="outline"
       size="sm"
+      className="hover:bg-foreground/10 dark:hover:bg-foreground/10"
       onClick={() => switchTo(other)}
       aria-label={`Switch language to ${other.toUpperCase()}`}
     >

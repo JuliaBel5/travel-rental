@@ -32,7 +32,10 @@ export const authOptions: NextAuthOptions = {
         const accountKey = `login:acct:${ip}:${email}`;
 
         // Only failures are counted; peek here so a blocked try doesn't extend the window.
-        if (!isRateLimited(ipKey, LOGIN_IP_LIMIT).ok || !isRateLimited(accountKey, LOGIN_ACCOUNT_LIMIT).ok) {
+        if (
+          !isRateLimited(ipKey, LOGIN_IP_LIMIT).ok ||
+          !isRateLimited(accountKey, LOGIN_ACCOUNT_LIMIT).ok
+        ) {
           throw new Error(RATE_LIMITED_ERROR);
         }
 
@@ -55,13 +58,27 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) token.id = user.id;
+
+      // The avatar is a base64 data-URL that can be ~100KB — far past the 4KB
+      // cookie limit. NextAuth copies user.image → token.picture at sign-in, so
+      // strip it on every pass. Avatars are served via /api/account instead.
+      token.picture = null;
+
+      // useSession().update({ name }) refreshes the header without re-login.
+      // Only accept the name string; never trust an image from the client here.
+      if (trigger === "update" && session && typeof session === "object") {
+        const nextName = (session as { name?: unknown }).name;
+        if (typeof nextName === "string") token.name = nextName;
+      }
       return token;
     },
     session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id;
+      if (session.user) {
+        if (token.id) session.user.id = token.id;
+        // Keep the base64 avatar out of the session payload as well.
+        session.user.image = null;
       }
       return session;
     },
