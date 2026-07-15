@@ -5,6 +5,7 @@ import type {
   Listing as DbListing,
   Review as DbReview,
 } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
 import type {
@@ -204,4 +205,82 @@ export async function getAmenities(): Promise<Amenity[]> {
 export async function getAllHosts(): Promise<Host[]> {
   const rows = await prisma.host.findMany();
   return rows.map(toHost);
+}
+
+// ---- account (current user) ----
+
+export interface UserProfile {
+  name: string | null;
+  email: string;
+  /** base64 data-URL or null; never stored in the JWT/session (see lib/auth). */
+  image: string | null;
+  createdAt: Date;
+  bookingsCount: number;
+  favoritesCount: number;
+}
+
+/** Fresh account snapshot for the signed-in user (never trust the stale JWT). */
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const row = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      name: true,
+      email: true,
+      image: true,
+      createdAt: true,
+      _count: { select: { bookings: true, favorites: true } },
+    },
+  });
+  if (!row) return null;
+  return {
+    name: row.name,
+    email: row.email,
+    image: row.image,
+    createdAt: row.createdAt,
+    bookingsCount: row._count.bookings,
+    favoritesCount: row._count.favorites,
+  };
+}
+
+/** Update the editable profile fields; only provided keys are written. */
+export async function updateUserProfile(
+  userId: string,
+  data: { name?: string; image?: string | null },
+): Promise<void> {
+  await prisma.user.update({ where: { id: userId }, data });
+}
+
+export type ChangePasswordResult = { ok: true } | { ok: false; reason: "not_found" | "mismatch" };
+
+/** Verify the current password, then hash and store the new one. */
+export async function changeUserPassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<ChangePasswordResult> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { passwordHash: true },
+  });
+  if (!user) return { ok: false, reason: "not_found" };
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) return { ok: false, reason: "mismatch" };
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+  return { ok: true };
+}
+
+/**
+ * Delete the account. Favorites cascade at the DB level, but we clear them
+ * explicitly and disconnect bookings (userId is nullable) so past reservations
+ * survive as history — all atomically.
+ */
+export async function deleteUserAccount(userId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.favorite.deleteMany({ where: { userId } }),
+    prisma.booking.updateMany({ where: { userId }, data: { userId: null } }),
+    prisma.user.delete({ where: { id: userId } }),
+  ]);
 }

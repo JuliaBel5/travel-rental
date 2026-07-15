@@ -30,7 +30,7 @@ export function Logo({ className }: { className?: string }) {
         <rect fill="var(--background)" x="11.3" y="12.2" width="9.4" height="7" rx="0.6" />
         <rect fill="currentColor" x="14.4" y="15.2" width="3.2" height="4" rx="0.4" />
       </svg>
-      <span className="text-lg font-semibold tracking-tight text-foreground">
+      <span className="hidden text-lg font-semibold tracking-tight text-foreground sm:inline">
         {t.common.appName}
       </span>
     </Link>

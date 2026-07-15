@@ -12,6 +12,7 @@ export function ThemeToggle() {
     <Button
       variant="outline"
       size="icon-sm"
+      className="hover:bg-foreground/10 dark:hover:bg-foreground/10"
       aria-label={t.nav.toggleTheme}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
